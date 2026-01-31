@@ -1,5 +1,5 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Layout from './components/Layout';
@@ -16,10 +16,24 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+// Logout component that clears session and redirects to login
+function Logout() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    logout();
+    navigate('/login', { replace: true });
+  }, [logout, navigate]);
+  
+  return <div style={{ padding: 40, textAlign: 'center' }}>Logging out...</div>;
+}
+
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/logout" element={<Logout />} />
       <Route
         path="/"
         element={
