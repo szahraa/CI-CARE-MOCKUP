@@ -11,5 +11,10 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "build": "^0.1.4",
+    "express": "^5.2.1",
+    "serverless-http": "^4.0.0"
   }
 }
