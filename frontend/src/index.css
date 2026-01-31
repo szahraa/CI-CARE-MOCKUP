@@ -1,0 +1,38 @@
+/* CI-CARE theme - same as dashboard design */
+:root {
+  --color-bg: #f8fafc;
+  --color-white: #ffffff;
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-light: #dbeafe;
+  --color-sidebar-text: #64748b;
+  --color-sidebar-active-bg: #2563eb;
+  --color-sidebar-active-text: #ffffff;
+  --color-green: #22c55e;
+  --color-green-light: #dcfce7;
+  --color-orange: #f59e0b;
+  --color-orange-light: #fef3c7;
+  --color-purple: #8b5cf6;
+  --color-purple-light: #ede9fe;
+  --color-yellow: #eab308;
+  --color-yellow-light: #fef9c3;
+  --color-blue-light: #e0f2fe;
+  --color-text: #1e293b;
+  --color-text-muted: #64748b;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 1px 3px rgba(0,0,0,0.1);
+  --radius: 12px;
+  --radius-btn: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.5;
+}
+button { cursor: pointer; font-family: inherit; }
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+input, select, textarea { font-family: inherit; }

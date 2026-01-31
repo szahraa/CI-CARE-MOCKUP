@@ -1,0 +1,6 @@
+.modal-wide { max-width: 560px; }
+.modal form textarea {
+  width: 100%; padding: 10px 14px; margin-bottom: 16px;
+  border: 1px solid #e2e8f0; border-radius: var(--radius-btn);
+  resize: vertical; font-family: inherit;
+}
