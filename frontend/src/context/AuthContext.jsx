@@ -11,10 +11,23 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = getToken();
+    const storedUser = localStorage.getItem('ci-care-user');
     if (!token) {
       setLoading(false);
       return;
     }
+    // Check for stored user first (simple login)
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        localStorage.removeItem('ci-care-user');
+        localStorage.removeItem('ci-care-token');
+      }
+      setLoading(false);
+      return;
+    }
+    // Fallback to API check
     fetch(`${API}/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then(setUser)
@@ -23,20 +36,21 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    const res = await fetch(`${API}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Login failed');
-    localStorage.setItem('ci-care-token', data.token);
-    setUser(data.user);
-    return data.user;
+    // Simple login - accept any email/password combination
+    const fakeUser = {
+      id: 1,
+      email: email,
+      name: email.split('@')[0] || 'User',
+    };
+    localStorage.setItem('ci-care-token', 'fake-token-' + Date.now());
+    localStorage.setItem('ci-care-user', JSON.stringify(fakeUser));
+    setUser(fakeUser);
+    return fakeUser;
   };
 
   const logout = () => {
     localStorage.removeItem('ci-care-token');
+    localStorage.removeItem('ci-care-user');
     setUser(null);
   };
 

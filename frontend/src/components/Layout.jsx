@@ -46,7 +46,7 @@ export default function Layout() {
             <span className="user-name">{user?.name || 'User'}</span>
             <span className="user-role">{user?.role || 'Dokter Umum'}</span>
           </div>
-          <button type="button" className="header-avatar-btn" onClick={() => { if (window.confirm('Keluar dari CI-CARE?')) logout(); }} title={`${user?.name} - Keluar`}>
+          <button type="button" className="header-avatar-btn" onClick={() => { if (window.confirm('Keluar dari CI-CARE?')) { logout(); navigate('/login'); } }} title={`${user?.name} - Keluar`}>
             <span className="header-avatar">{initials}</span>
           </button>
         </div>

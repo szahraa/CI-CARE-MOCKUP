@@ -1,27 +1,23 @@
 import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 export default function Login() {
-  const { user, login } = useAuth();
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  if (user) return <Navigate to="/" replace />;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
     try {
       await login(email, password);
       navigate('/', { replace: true });
-    } catch (err) {
-      setError(err.message || 'Login gagal. Periksa email dan kata sandi.');
+    } catch (error) {
+      console.error('Login error:', error);
     } finally {
       setLoading(false);
     }
@@ -41,7 +37,6 @@ export default function Login() {
           <p>Smart Healthcare System</p>
         </div>
         <form onSubmit={handleSubmit} className="login-form">
-          {error && <div className="login-error">{error}</div>}
           <label>
             Email
             <input
@@ -68,7 +63,6 @@ export default function Login() {
             {loading ? 'Masuk...' : 'Masuk'}
           </button>
         </form>
-        <p className="login-hint">Demo: dr.sarah@cicare.com / admin123</p>
       </div>
     </div>
   );

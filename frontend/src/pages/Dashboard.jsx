@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Dashboard.css';
 
 export default function Dashboard() {
   const { user, authFetch } = useAuth();
+  const location = useLocation();
   const [stats, setStats] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [patients, setPatients] = useState([]);
+
+  // Get email from login page navigation state
+  const displayEmail = location.state?.email || user?.email || '';
 
   useEffect(() => {
     authFetch('/dashboard/stats').then(r => r.json()).then(setStats).catch(() => setStats({
@@ -24,6 +28,8 @@ export default function Dashboard() {
     return 'Selamat Malam';
   };
 
+  const userName = user?.name?.split(' ').slice(0, 2).join(' ') || displayEmail?.split('@')[0] || 'User';
+
   const statCards = stats ? [
     { label: 'Total Pasien', value: stats.totalPatients, sub: '+12%', subColor: 'green', icon: 'people', bg: 'var(--color-primary-light)' },
     { label: 'Pasien Selesai', value: stats.completedToday, sub: '5 hari ini', icon: 'check', bg: 'var(--color-green-light)' },
@@ -34,8 +40,8 @@ export default function Dashboard() {
   return (
     <div className="dashboard">
       <div className="dashboard-welcome">
-        <h2>{greeting()}, {user?.name?.split(' ').slice(0, 2).join(' ') || 'User'} 👋</h2>
-        <p>Anda memiliki {stats?.appointmentsToday ?? 8} pasien hari ini • {stats?.inQueue ?? 3} menunggu</p>
+        <h2>{greeting()}, {userName} 👋</h2>
+        {displayEmail && <p className="dashboard-email">{displayEmail}</p>}
       </div>
 
       <div className="stat-cards">
