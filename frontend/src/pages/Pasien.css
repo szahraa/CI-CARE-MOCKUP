@@ -50,3 +50,26 @@
   border: 1px solid #e2e8f0; border-radius: var(--radius-btn);
 }
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+
+/* Header actions */
+.header-actions { display: flex; gap: 12px; align-items: center; }
+.search-input {
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-btn);
+  font-size: 0.875rem;
+  min-width: 200px;
+}
+.search-input:focus { outline: none; border-color: var(--color-primary); }
+
+/* Action buttons */
+.action-buttons { display: flex; gap: 8px; }
+.btn-sm { padding: 6px 12px; font-size: 0.75rem; }
+.btn-danger { background: #ef4444; color: white; }
+.btn-danger:hover { background: #dc2626; }
+.btn-outline {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  color: var(--color-text);
+}
+.btn-outline:hover { background: #f1f5f9; }

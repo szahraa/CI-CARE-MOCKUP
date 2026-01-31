@@ -1,67 +1,106 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
 import './Pasien.css';
 
 export default function Pasien() {
-  const { authFetch } = useAuth();
+  const { patients, addPatient, updatePatient, deletePatient } = useData();
   const [searchParams] = useSearchParams();
   const showNew = searchParams.get('new') === '1';
-  const [patients, setPatients] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(showNew);
+  const [editingPatient, setEditingPatient] = useState(null);
   const [form, setForm] = useState({ name: '', birth_date: '', condition: '', status: 'Stabil' });
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    authFetch('/patients').then(r => r.json()).then(data => { setPatients(data); setLoading(false); }).catch(() => setLoading(false));
-  }, [authFetch]);
+    if (showNew) {
+      setModalOpen(true);
+    }
+  }, [showNew]);
 
-  const openModal = () => { setModalOpen(true); setForm({ name: '', birth_date: '', condition: '', status: 'Stabil' }); };
-  const closeModal = () => setModalOpen(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await authFetch('/patients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+  const openModal = (patient = null) => {
+    if (patient) {
+      setEditingPatient(patient);
+      setForm({
+        name: patient.name || '',
+        birth_date: patient.birth_date || '',
+        condition: patient.condition || '',
+        status: patient.status || 'Stabil',
       });
-      const newPatient = await res.json();
-      setPatients(prev => [newPatient, ...prev]);
-      closeModal();
-    } catch (err) {
-      alert('Gagal menambah pasien.');
+    } else {
+      setEditingPatient(null);
+      setForm({ name: '', birth_date: '', condition: '', status: 'Stabil' });
+    }
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditingPatient(null);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (editingPatient) {
+      updatePatient(editingPatient.id, form);
+    } else {
+      addPatient(form);
+    }
+    closeModal();
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus pasien ini?')) {
+      deletePatient(id);
     }
   };
 
   const statusColors = { Stabil: 'green', Monitoring: 'yellow', Pemulihan: 'blue' };
 
+  const filteredPatients = patients.filter(p =>
+    p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.condition?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="page pasien-page">
       <div className="page-header">
         <h1>Pasien</h1>
-        <button type="button" className="btn btn-primary" onClick={openModal}>
-          + Pasien Baru
-        </button>
+        <div className="header-actions">
+          <input
+            type="search"
+            placeholder="Cari pasien..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+          <button type="button" className="btn btn-primary" onClick={() => openModal()}>
+            + Pasien Baru
+          </button>
+        </div>
       </div>
 
       <div className="card table-card">
-        {loading ? (
-          <p className="muted">Memuat...</p>
-        ) : (
-          <table className="data-table">
-            <thead>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Nama</th>
+              <th>Tanggal Lahir</th>
+              <th>Kondisi</th>
+              <th>Status</th>
+              <th>Kunjungan Terakhir</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredPatients.length === 0 ? (
               <tr>
-                <th>Nama</th>
-                <th>Tanggal Lahir</th>
-                <th>Kondisi</th>
-                <th>Status</th>
-                <th>Kunjungan Terakhir</th>
+                <td colSpan={6} className="muted">
+                  {searchTerm ? 'Tidak ada pasien yang cocok dengan pencarian.' : 'Belum ada pasien. Klik "+ Pasien Baru" untuk menambah.'}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {patients.map((p) => (
+            ) : (
+              filteredPatients.map((p) => (
                 <tr key={p.id}>
                   <td>
                     <div className="cell-patient">
@@ -73,18 +112,28 @@ export default function Pasien() {
                   <td>{p.condition || '-'}</td>
                   <td><span className={`badge badge-${statusColors[p.status] || 'gray'}`}>{p.status}</span></td>
                   <td>{p.last_visit || '-'}</td>
+                  <td>
+                    <div className="action-buttons">
+                      <button type="button" className="btn btn-sm btn-secondary" onClick={() => openModal(p)}>
+                        Edit
+                      </button>
+                      <button type="button" className="btn btn-sm btn-danger" onClick={() => handleDelete(p.id)}>
+                        Hapus
+                      </button>
+                    </div>
+                  </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       {modalOpen && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-head">
-              <h2>Pasien Baru</h2>
+              <h2>{editingPatient ? 'Edit Pasien' : 'Pasien Baru'}</h2>
               <button type="button" className="modal-close" onClick={closeModal}>×</button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -102,7 +151,7 @@ export default function Pasien() {
               </select>
               <div className="modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={closeModal}>Batal</button>
-                <button type="submit" className="btn btn-primary">Simpan</button>
+                <button type="submit" className="btn btn-primary">{editingPatient ? 'Simpan Perubahan' : 'Simpan'}</button>
               </div>
             </form>
           </div>

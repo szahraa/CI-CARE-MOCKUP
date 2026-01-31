@@ -1,25 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
 import './Dashboard.css';
 
 export default function Dashboard() {
-  const { user, authFetch } = useAuth();
+  const { user } = useAuth();
+  const { patients, appointments, getStats } = useData();
   const location = useLocation();
-  const [stats, setStats] = useState(null);
-  const [appointments, setAppointments] = useState([]);
-  const [patients, setPatients] = useState([]);
 
   // Get email from login page navigation state
   const displayEmail = location.state?.email || user?.email || '';
 
-  useEffect(() => {
-    authFetch('/dashboard/stats').then(r => r.json()).then(setStats).catch(() => setStats({
-      totalPatients: 234, completedToday: 18, inQueue: 3, appointmentsToday: 8,
-    }));
-    authFetch('/appointments').then(r => r.json()).then(setAppointments).catch(() => setAppointments([]));
-    authFetch('/patients').then(r => r.json()).then(setPatients).catch(() => setPatients([]));
-  }, [authFetch]);
+  const stats = getStats();
 
   const greeting = () => {
     const h = new Date().getHours();
@@ -30,12 +23,12 @@ export default function Dashboard() {
 
   const userName = user?.name?.split(' ').slice(0, 2).join(' ') || displayEmail?.split('@')[0] || 'User';
 
-  const statCards = stats ? [
+  const statCards = [
     { label: 'Total Pasien', value: stats.totalPatients, sub: '+12%', subColor: 'green', icon: 'people', bg: 'var(--color-primary-light)' },
     { label: 'Pasien Selesai', value: stats.completedToday, sub: '5 hari ini', icon: 'check', bg: 'var(--color-green-light)' },
     { label: 'Pasien Antri', value: stats.inQueue, sub: 'Menunggu', subColor: 'orange', icon: 'clock', bg: 'var(--color-orange-light)' },
     { label: 'Jadwal Temu', value: stats.appointmentsToday, sub: 'Hari ini', icon: 'cal', bg: 'var(--color-purple-light)' },
-  ] : [];
+  ];
 
   return (
     <div className="dashboard">
@@ -69,20 +62,20 @@ export default function Dashboard() {
             <span className="card-icon">📅</span>
           </div>
           <ul className="schedule-list">
-            {(appointments.length ? appointments.slice(0, 5) : [
-              { scheduled_at: '09:00', patient_name: 'Budi Santoso', type: 'Kontrol Rutin', status: 'Menunggu' },
-              { scheduled_at: '10:30', patient_name: 'Ani Rahayu', type: 'Konsultasi', status: 'Terjadwal' },
-              { scheduled_at: '14:00', patient_name: 'Citra Dewi', type: 'Follow-up', status: 'Terjadwal' },
-            ]).map((apt, i) => (
-              <li key={i} className="schedule-item">
-                <span className="schedule-time">{apt.scheduled_at?.includes(' ') ? apt.scheduled_at.split(' ')[1] : apt.scheduled_at}</span>
-                <div className="schedule-info">
-                  <strong>{apt.patient_name}</strong>
-                  <span>{apt.type}</span>
-                </div>
-                <span className={`badge badge-${apt.status === 'Menunggu' ? 'orange' : 'gray'}`}>{apt.status}</span>
-              </li>
-            ))}
+            {appointments.length === 0 ? (
+              <li className="empty-state">Belum ada jadwal. <Link to="/jadwal">Tambah jadwal baru</Link></li>
+            ) : (
+              appointments.slice(0, 5).map((apt) => (
+                <li key={apt.id} className="schedule-item">
+                  <span className="schedule-time">{apt.scheduled_at?.includes(' ') ? apt.scheduled_at.split(' ')[1] : apt.scheduled_at}</span>
+                  <div className="schedule-info">
+                    <strong>{apt.patient_name}</strong>
+                    <span>{apt.type}</span>
+                  </div>
+                  <span className={`badge badge-${apt.status === 'Menunggu' ? 'orange' : apt.status === 'Selesai' ? 'green' : 'gray'}`}>{apt.status}</span>
+                </li>
+              ))
+            )}
           </ul>
           <Link to="/jadwal" className="card-link">Lihat Semua Jadwal</Link>
         </div>
@@ -93,22 +86,22 @@ export default function Dashboard() {
             <span className="card-icon">👥</span>
           </div>
           <ul className="patients-list">
-            {(patients.length ? patients.slice(0, 5) : [
-              { name: 'Budi Santoso', condition: 'Diabetes Type 2', last_visit: '2 hari lalu', status: 'Stabil' },
-              { name: 'Ani Rahayu', condition: 'Hipertensi', last_visit: '1 hari lalu', status: 'Monitoring' },
-              { name: 'Citra Dewi', condition: 'Pemulihan Pasca Operasi', last_visit: '3 hari lalu', status: 'Pemulihan' },
-            ]).map((p, i) => (
-              <li key={i} className="patient-item">
-                <div className="patient-avatar">{p.name?.charAt(0) || '?'}</div>
-                <div className="patient-info">
-                  <strong>{p.name}</strong>
-                  <span className="patient-meta">• {p.condition}</span>
-                  <span className="patient-visit">Kunjungan terakhir: {p.last_visit}</span>
-                </div>
-                <span className={`badge badge-status badge-${p.status === 'Stabil' ? 'green' : p.status === 'Monitoring' ? 'yellow' : 'blue'}`}>{p.status}</span>
-                <Link to={`/pasien?id=${p.id}`} className="patient-arrow">→</Link>
-              </li>
-            ))}
+            {patients.length === 0 ? (
+              <li className="empty-state">Belum ada pasien. <Link to="/pasien?new=1">Tambah pasien baru</Link></li>
+            ) : (
+              patients.slice(0, 5).map((p) => (
+                <li key={p.id} className="patient-item">
+                  <div className="patient-avatar">{p.name?.charAt(0) || '?'}</div>
+                  <div className="patient-info">
+                    <strong>{p.name}</strong>
+                    <span className="patient-meta">• {p.condition || 'Tidak ada kondisi'}</span>
+                    <span className="patient-visit">Kunjungan terakhir: {p.last_visit || '-'}</span>
+                  </div>
+                  <span className={`badge badge-status badge-${p.status === 'Stabil' ? 'green' : p.status === 'Monitoring' ? 'yellow' : 'blue'}`}>{p.status}</span>
+                  <Link to={`/pasien?id=${p.id}`} className="patient-arrow">→</Link>
+                </li>
+              ))
+            )}
           </ul>
         </div>
       </div>
